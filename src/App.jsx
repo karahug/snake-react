@@ -14,14 +14,20 @@ class App extends React.Component{
         this._resume = this._resume.bind(this);
         this._handleKey = this._handleKey.bind(this);
         this._eat = this._eat.bind(this);
+        this._gameOver = this._gameOver.bind(this);
     }
     
     
     componentDidMount(){
-        this._tick();
+        this._tick(this._tick);
     }
-    _tick(){
-        switch(this.direction){
+    _tick(callback){
+        console.log(this.state.paused);
+        if(!this.state.paused){
+            console.log(new Error().stack);
+            setTimeout(callback, this.state.speed, callback );
+        }
+        switch(this.state.direction){
             case 'up':
                 
             case 'down':
@@ -32,12 +38,9 @@ class App extends React.Component{
                 
             default:
         }
-        if(!this.paused){
-            setTimeout(this._tick, this.speed);
-        }
     }
     _pause(){
-        this.paused = true;
+        this.setState({paused: true});
     }
     _handleKey(event){
         var key =  event.nativeEvent.keycode;
@@ -51,16 +54,19 @@ class App extends React.Component{
         
     }
     _resume(){
-        this.paused = false;
-        this._tick();
+        this.setState({paused: false});
+        this._tick(this._tick);
+    }
+    
+    _gameOver(){
+        
     }
     render(){
         return(
         <div className='board'
-            onFocus = {this._resume}
             onBlur = {this._pause}
             onKeyDown = {this._handleKey}
-            refs={(board)=>{this.board = board;}} //set refs so we can call this.board.focus in this._resume()
+            ref={(board)=>{this.board = board;}} //set refs so we can call this.board.focus in this._resume()
         >
             
         </div>
