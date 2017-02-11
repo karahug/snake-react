@@ -21,10 +21,12 @@ class App extends React.Component{
     componentDidMount(){
         this._tick(this._tick);
     }
-    _tick(callback){
-        console.log(this.state.paused);
+    _tick(callback){ 
+        //tick should be broken up into multiple components:
+        //calculate next square
+        //_eat(nextSquare) decides whether to increase length by 1 and create a new random food tile
+        //
         if(!this.state.paused){
-            console.log(new Error().stack);
             setTimeout(callback, this.state.speed, callback );
         }
         switch(this.state.direction){
