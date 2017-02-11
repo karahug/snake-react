@@ -8,7 +8,7 @@ class App extends React.Component{
     constructor(){
         super();
         //autoBind(this);
-        this.state = {snake: [INITIAL_COORDINATES], direction: null, length: 2, speed: INITIAL_SPEED, paused: false};
+        this.state = {snake: [INITIAL_COORDINATES], food: null, direction: null};
         this._tick = this._tick.bind(this);
         this._pause = this._pause.bind(this);
         this._resume = this._resume.bind(this);
@@ -22,24 +22,7 @@ class App extends React.Component{
         this._tick(this._tick);
     }
     _tick(callback){ 
-        //tick should be broken up into multiple components:
-        //calculate next square
-        //_eat(nextSquare) decides whether to increase length by 1 and create a new random food tile
-        //
-        if(!this.state.paused){
-            setTimeout(callback, this.state.speed, callback );
-        }
-        switch(this.state.direction){
-            case 'up':
-                
-            case 'down':
-                
-            case 'left':
-            
-            case 'right':
-                
-            default:
-        }
+        
     }
     _pause(){
         this.setState({paused: true});
