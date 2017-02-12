@@ -55,7 +55,7 @@ describe('<App/>', ()=>{
                     expect(rendered.state('direction')).to.equal(null);
                 });
                 it('sets initial speed', ()=>{
-                    expect(rendered.state('speed')).to.equal(100);
+                    expect(rendered.state('speed')).to.equal(10);
                 });
                 
                 it('sets initial length = 2', ()=>{
@@ -68,96 +68,76 @@ describe('<App/>', ()=>{
     
     describe('component methods', ()=>{
         describe('_tick', ()=>{ 
-            //will run _tick 10 times when sinon.spy used in lifecycle testing
-            //but test will still pass when the component works
-            //pass when paused is true, fail when paused is false
-            //try using chai-as-promised to clean up the two callback tests
-            var rendered;
-            var state;
-            var _tick;
-            beforeEach(()=>{
-                rendered = shallow(<App />);
-                state = rendered.instance().state;
-                _tick = rendered.instance()._tick;
-            });
-            it("doesn't callback when paused", ()=>{
-                state.paused = true; 
-                return Promise.race([
-                    new Promise(function(resolve, reject){
-                        setTimeout(function(){
-                            resolve('callback failed');
-                        }, 1000);
-                    }),
-                    new Promise(function(resolve, reject){
-                        _tick(function(){
-                            resolve('callback succeeded');
+            const rendered = shallow(<App />);
+            const _tick = rendered.instance()._tick;
+            describe('when gameOver and paused are false', ()=>{
+                describe('when snake.length and length are equal', ()=>{
+                    describe('when the next square is empty', ()=>{
+                        describe('in the middle of the board', ()=>{
+                            const rendered = shallow(<App />);
+                            const _tick = rendered.instance()._tick;
+                            const setState = rendered.setState;
+                            const state = rendered.instance().state;
+                            it('adds the correct square to snake', ()=>{
+                                const snake = [[10,10], [9,10]];
+                                const direction = 'up';
+                                rendered.setState({direction: direction, snake: snake}, ()=>{
+                                    rendered.instance()._tick(()=>{return Promise.resolve()}).then(()=>{expect(rendered.instance().state.snake).to.eql([[10,10],[9,10],[8,10]]);});
+                                });
+                            });
                         });
-                    })
-                ]).then(function(x){
-                        expect(x).to.equal('callback failed');
-                });
-            });
-            it('calls back when paused is false', ()=>{
-                state.paused = false;
-                return Promise.race([
-                    new Promise(function(resolve, reject){
-                        setTimeout(function(){
-                            resolve('callback failed');
-                        }, 1000);
-                    }),
-                    new Promise(function(resolve, reject){
-                        _tick(function(){
-                            resolve('callback succeeded');
+                        describe('on the edge of the board', ()=>{
+                            it('adds the correct square to snake', ()=>{
+                                
+                            });
                         });
-                    })
-                ]).then(function(x){
-                        expect(x).to.equal('callback succeeded');
+                    });
+                    describe('when the next square is food', ()=>{
+                        it('increments length state', ()=>{
+                            
+                        });
+                    });
+                    describe('when the next square is an element of snake', ()=>{
+                        it('sets gameOver state to true', ()=>{
+                            
+                        });
+                    });
+                    
+                    describe('when input direction is opposite of direction', ()=>{
+                        it('leaves direction the same', ()=>{
+                            
+                        });
+                    });
+                    
                 });
+                describe('when snake.length is less than length', ()=>{
+                    it('increases snake.length by 1', ()=>{
+                        
+                    });
+                });
+                
+                describe('when next square is food', ()=>{
+                    it('increases length', ()=>{
+                        
+                    });
+                    it('sets a random open square to food', ()=>{
+                        
+                    });
+                });
+                describe('when next square in snake', ()=>{
+                    it('sets gameOver to true', ()=>{
+                        
+                    });
+                });
+                
             });
-            it('sets a pixel in the correct direction to snake', ()=>{
-               state.length = 10;
-               state.direction = 'up';
-               _tick();
-               state.direction = 'left';
-               _tick();
-               state.direction = 'down';
-               _tick();
-               _tick();
-               state.direction = 'right';
-               _tick();
-               expect(state.snake).to.eql([[10,10], [9,10], [9,9], [10,9], [11,9], [11,10]]);
-            });
-            it('calls this._eat when the next pixel is food', ()=>{
-                state.food = [9,10];
-                state.direction = 'up';
-                sinon.spy(rendered.instance()._eat);
-                _tick();
-                expect(rendered.instance()._eat.calledOnce).to.equal(true); //possibly bad testing, since it relies on how _tick handles direction
-                rendered.instance()._eat.restore(); //possibly unnecessary 
-                //_tick computes next square
-                //if next square is food
-                    //call _eat
-                //create a copy of state.snake
-                //if state.snake.length < state.length
-                    //unshift next square
-                //else
-                    //unshift next square, pop()
-                //setState({snake: copy})
-                //should consider breaking up tick into multiple components
-            });
-            it('calls this._gameOver when next pixel corresponds to an element of this.snake', ()=>{
-               
-            });
-            it('first removes the tail of this.snake when length is reached', ()=>{
-               
-            });
-           
-        });
+            
+        }); 
         describe('_pause', ()=>{
             it('sets this.paused to true', ()=>{
                
             });
-            it('displays controls', ()=>{
+            it('blurs .board div', ()=>{
                
             });
         });
@@ -170,20 +150,6 @@ describe('<App/>', ()=>{
             });
             it('focuses on .board div', ()=>{
                
-            });
-            it('hides controls', ()=>{
-               
-            });
-        });
-        describe('_eat', ()=>{
-            it('increases this.length by 1', ()=>{
-               
-            });
-            it('sets a random empty pixel to be food', ()=>{
-               
-            });
-            it('increases speed', ()=>{
-               //by how much?
             });
         });
         describe('_handleKey', ()=>{
@@ -213,7 +179,7 @@ describe('<App/>', ()=>{
                
             });
         });
-        describe('_gameOver', ()=>{
+        describe('_reset', ()=>{
             
         });       
     });
