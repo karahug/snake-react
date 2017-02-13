@@ -34,7 +34,7 @@ describe('<App/>', ()=>{
                 expect(rendered.find('#controls')).to.have.length(0);
             });
             it('renders 20x20 pixels', () =>{
-               expect(rendered.find('.pixel')).to.have.length(400);
+               expect(rendered.find('.square')).to.have.length(400);
             });
             it('renders a food pixel', ()=>{
                 expect(rendered.find(".food")).to.have.length(1);
@@ -59,7 +59,7 @@ describe('<App/>', ()=>{
                 });
                 
                 it('sets initial length = 2', ()=>{
-                    expect(rendered.state('length')).to.equal(2);
+                    expect(rendered.state('snakeLength')).to.equal(2);
                 });
             });
         });
@@ -67,66 +67,94 @@ describe('<App/>', ()=>{
     });
     
     describe('component methods', ()=>{
-        describe('_tick', ()=>{ 
-            const rendered = shallow(<App />);
-            const _tick = rendered.instance()._tick;
+        var rendered;
+        var state;
+        var setState;
+        var instance;
+        beforeEach(()=>{
+            rendered = shallow(<App />);
+            instance = rendered.instance();
+            state = instance.state;
+            setState = instance.setState.bind(instance); // setState creates a new object and sets state to it
+        });
+        describe('_tick', ()=>{
+            //should test in order by paused/gameover => direction => nextSquare
+            var _tick;
+            var getTickPromise;
+            beforeEach(()=>{
+                _tick = instance._tick.bind(instance);
+                getTickPromise = function(state){
+                    return new Promise((resolve, reject)=>{
+                        setState(state, ()=>{
+                            _tick(()=>{}).then(()=>{
+                                resolve(instance.state);
+                            });
+                        });
+                    });
+                };
+            });
+
             describe('when gameOver and paused are false', ()=>{
                 describe('when snake.length and length are equal', ()=>{
                     describe('when the next square is empty', ()=>{
                         describe('in the middle of the board', ()=>{
-                            const rendered = shallow(<App />);
-                            const _tick = rendered.instance()._tick;
-                            const setState = rendered.setState;
-                            const state = rendered.instance().state;
                             it('adds the correct square to snake', ()=>{
                                 const snake = [[10,10], [9,10]];
+                                const food = [0,0];
                                 const direction = 'up';
-                                rendered.setState({direction: direction, snake: snake}, ()=>{
-                                    rendered.instance()._tick(()=>{return Promise.resolve()}).then(()=>{expect(rendered.instance().state.snake).to.eql([[10,10],[9,10],[8,10]]);});
+                                //return promise
+                                return getTickPromise({snake: snake, food: food, inputDirection: direction}).then((state)=>{
+                                    expect(state.snake).to.eql([[9,10],[8,10]]);
                                 });
                             });
                         });
                         describe('on the edge of the board', ()=>{
                             it('adds the correct square to snake', ()=>{
-                                
+                                const snake = [[0,0]];
+                                const direction = 'up';
+                                const food = [10, 10];
+                                return getTickPromise({snake: snake, inputDirection: direction, food: food}).then((state)=>{
+                                    expect(state.snake).to.eql([[0,0], [19,0]]);
+                                });
                             });
                         });
                     });
                     describe('when the next square is food', ()=>{
                         it('increments length state', ()=>{
-                            
+                            return getTickPromise({food:[9,10], inputDirection: 'up'}).then((state)=>{
+                                expect(state.snakeLength).to.equal(3);
+                            });
                         });
+                        it('sets a new food square correctly', ()=>{
+                            return getTickPromise({food:[9,10], inputDirection: 'up'}).then((state)=>{
+                                expect(state.food).is.not.eql([9,10]);
+                                expect(state.food).is.not.eql([10,10]);
+                            });
+                        })
                     });
                     describe('when the next square is an element of snake', ()=>{
                         it('sets gameOver state to true', ()=>{
-                            
+                            return getTickPromise({snake:[[10,10], [9,10],[9,11], [10,11]], snakeLength:5, inputDirection: 'left', food: [0,0]}).then((state)=>{
+                                expect(state.gameOver).to.equal(true);
+                            });
                         });
                     });
                     
                     describe('when input direction is opposite of direction', ()=>{
                         it('leaves direction the same', ()=>{
-                            
+                            return getTickPromise({direction:'up', inputDirection: 'down', food:[0,0]}).then((state)=>{
+                                expect(state.direction).to.equal('up');
+                                expect(state.snake).to.eql([[10,10], [9,10]]);
+                            });
                         });
                     });
                     
                 });
                 describe('when snake.length is less than length', ()=>{
                     it('increases snake.length by 1', ()=>{
-                        
-                    });
-                });
-                
-                describe('when next square is food', ()=>{
-                    it('increases length', ()=>{
-                        
-                    });
-                    it('sets a random open square to food', ()=>{
-                        
-                    });
-                });
-                describe('when next square in snake', ()=>{
-                    it('sets gameOver to true', ()=>{
-                        
+                        return getTickPromise({inputDirection: 'up', food: [0,0]}).then((state)=>{
+                            expect(state.snake.length).to.equal(2);
+                        });
                     });
                 });
                 
@@ -134,19 +162,27 @@ describe('<App/>', ()=>{
             
         }); 
         describe('_pause', ()=>{
-            it('sets this.paused to true', ()=>{
-               
+            it('sets state.paused to true', ()=>{
+               instance._pause();
+               expect(instance.state.paused).to.equal(true);
             });
             it('blurs .board div', ()=>{
                
             });
         });
         describe('_resume', ()=>{
+            beforeEach(()=>{
+                setState({paused: true});
+            });
             it('sets this.paused to false', ()=>{
-               
+                sinon.stub(instance, '_tick');
+                instance._resume();
+                expect(instance.state.paused).to.equal(false);
             });
             it('calls this._tick', ()=>{
-               
+                sinon.stub(instance, '_tick');
+                instance._resume();
+                expect(instance._tick.called).to.equal(true);
             });
             it('focuses on .board div', ()=>{
                

@@ -1,0 +1,24 @@
+.board {
+    width: 600px;
+    height: 600px;
+    background-color: gray;
+    overflow:hidden;
+}
+.square{
+    box-sizing: border-box;
+    width:30px;
+    height:30px;
+    float:left;
+    overflow:hidden;
+}
+.snake{
+    background-color: green;
+}
+.food{
+    background-color: orange;
+    border-radius: 50%;
+}
+.wrapper{
+    width:600px;
+    height:600px;
+}

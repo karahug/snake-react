@@ -8,7 +8,7 @@ class App extends React.Component{
     constructor(){
         super();
         //autoBind(this);
-        this.state = {snake: [INITIAL_COORDINATES], food: null, direction: null, paused: false, speed: INITIAL_SPEED, length: 2, inputDirection: null, gameOver: false};
+        this.state = {snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: 2, inputDirection: null, gameOver: false};
         this._tick = this._tick.bind(this);
         this._pause = this._pause.bind(this);
         this._resume = this._resume.bind(this);
@@ -18,17 +18,19 @@ class App extends React.Component{
     
     
     componentDidMount(){
+        this.board.focus();
         this._tick(this._tick);
     }
     _tick(callback){
-        if(!this.paused && !this.gameOver){
-            const timeOutPromise = new Promise((resolve, reject)=>{setTimeout(resolve(), Math.floor(1000/this.state.speed))});
-            const setStatePromise = (resolve, reject)=>{
+        console.log('tick');
+        if(!this.state.paused && !this.state.gameOver){
+            const timeOutPromise = new Promise((resolve, reject)=>{setTimeout(()=>{resolve()}, Math.floor(1000/this.state.speed))});
+            const setStatePromise = new Promise((resolve, reject)=>{
                 //creating local state variables so we can do one setState
                 var food = this.state.food.slice();
                 var speed = this.state.speed;
                 const snake = this.state.snake.slice();
-                var length = this.state.length;
+                var length = this.state.snakeLength;
                 var direction = resolveDirection(this.state.inputDirection, this.state.direction);
                 //get nextSquare and resolve(don't change state) if it's null
                 //really this should only happen when direction is null i.e. at the beginning of a game
@@ -37,58 +39,75 @@ class App extends React.Component{
                     resolve();
                 }
                 //gameOver if nextSquare is in snake 
-                if(snake.reduce(function(a,b){
-                    return a || (b.length == nextSquare.length && b.every((x,i)=>{ return x == nextSquare[i] }));
-                })){
-                    this.setState({gameOver: true});
-                    resolve();//maybe reject?
-                }
-                if(nextSquare == food){
+                if(compareCoordinates(nextSquare, food)){
                     length++;
                     food = randomOpenSquare(snake.concat([food]));
                     //increase speed
                     speed++; 
                 }
-                if(snake.length === this.state.length){
+                
+                if(snake.length === this.state.snakeLength){
                     snake.shift();
                 }
-                snake.push(nextSquare);
-                console.log(snake);
-                this.setState({snake: snake, food: food, speed: speed, length: length, direction: direction}, resolve());
-            };
+                
+                if(snake.reduce(function(a,b){
+                    return a || compareCoordinates(b, nextSquare);
+                }, false)){
+                    this.setState({gameOver: true}, resolve());
+                } else {
+                    snake.push(nextSquare);
+                    this.setState({snake: snake, food: food, speed: speed, snakeLength: length, direction: direction}, resolve());
+                }
+            });
             //use Promise.all perhaps to make sure that setState finishes before next _tick() is called
-            return Promise.all([timeOutPromise, setStatePromise]).then(callback(callback));    
+            return Promise.all([timeOutPromise, setStatePromise]).then(()=>{callback(callback)});    
         }
     }
     _pause(){
         this.setState({paused: true});
+        this.board.blur();
     }
     _handleKey(event){
-        var key =  event.nativeEvent.keycode;
+        var key =  event.nativeEvent.keyCode;
         if(KEYS[key] == 'space'){
             this._pause();
             return;
         }
         const inputDirection = KEYS[key] || this.state.key;
+        console.log(inputDirection);
         this.setState({inputDirection: inputDirection});
     }
  
     _resume(){
-        this.setState({paused: false});
-        this._tick(this._tick);
+        this.setState({paused: false},()=>{
+            this.board.focus();
+            this._tick(this._tick);
+        });
+        
     }
     
     _reset(){
+        this.setState({snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: 2, inputDirection: null, gameOver: false},()=>{
+            this.board.focus();
+            this._tick(this._tick);
+        });
         
     }
     render(){
         return(
-        <div className='board'
-            onBlur = {this._pause}
-            onKeyDown = {this._handleKey}
-            ref={(board)=>{this.board = board;}} //set refs so we can call this.board.focus in this._resume()
-        >
-        
+        <div className="wrapper">
+            <div className='board'
+                tabIndex="0"
+                onBlur={this._pause}
+                onKeyDown={this._handleKey}
+                ref={(board)=>{this.board = board}} //set refs so we can call this.board.focus in this._resume()
+            >
+                {createSquaresArray(this.state.snake, this.state.food)}
+            </div>
+            <div className='controls'>
+                <span>Game over</span>
+                <button type="button" onClick={this._reset}>Restart</button>
+            </div>
         </div>
         );
     }
@@ -102,7 +121,7 @@ function randomOpenSquare(snake){
     const openSquares = [];
     for(let i = 0; i < BOARD_SIZE; i++){
         for(let j = 0; j < BOARD_SIZE; j++){
-            if(!snake.reduce((a,b)=>{return a || (i == b[0] && j == b[1])}), false){
+            if(!snake.reduce((a,b)=>{return a || (i == b[0] && j == b[1])}, false)){
                 openSquares.push([i,j]);
             }
         }
@@ -116,7 +135,7 @@ function getNextSquare(snake, direction){
     const transformation = directionMap.get(direction);
     if(transformation){
         var nextSquare = head.map((x,i)=>{ return x + transformation[i]});
-        nextSquare = nextSquare.map((x)=>{return x < 0 ? BOARD_SIZE + x : x});
+        nextSquare = nextSquare.map((x)=>{return (BOARD_SIZE + x) % BOARD_SIZE});
         return nextSquare;
     }
 }
@@ -141,7 +160,7 @@ function resolveDirection(inputDirection, direction){
         case 'right':
             return inputDirection != 'left' ? inputDirection : direction;
         default:
-            return direction;
+            return inputDirection;
     }
 }
 
@@ -154,18 +173,19 @@ function isElementOf(element, snake){
 
 function createSquaresArray(snake, food){
     var squares = [];
-    for(let i = 0; i < BOARD_SIZE; i++){
+    for(let i = 0; i < Math.pow(BOARD_SIZE,2); i++){
         const coordinates = getCoordinates(i);
-        var type;
+        var c;
         if(compareCoordinates(food, coordinates)){
-            type = 'food';
+            c = 'square food';
         } else if(isElementOf(coordinates, snake)){
-            type = 'snake';
+            c = 'square snake';
         } else {
-            type = '';
+            c = 'square';
         }
-        squares.push(`<div className= square ${type}></div>`);
+        squares.push(<div className={c} key={i} />);
     }
+    return squares;
 }
 
 

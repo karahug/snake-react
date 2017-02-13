@@ -24,7 +24,7 @@ var config = {
           {
                 test: /\.css$/,
                 loaders: ['style', 'css'],
-                include: __dirname
+                include: APP_DIR
              }
         ]
     }
