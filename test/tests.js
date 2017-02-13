@@ -58,8 +58,8 @@ describe('<App/>', ()=>{
                     expect(rendered.state('speed')).to.equal(5);
                 });
                 
-                it('sets initial length = 4', ()=>{
-                    expect(rendered.state('snakeLength')).to.equal(4);
+                it('sets initial length = 5', ()=>{
+                    expect(rendered.state('snakeLength')).to.equal(5);
                 });
             });
         });
@@ -104,7 +104,7 @@ describe('<App/>', ()=>{
                                 const direction = 'up';
                                 //return promise
                                 return getTickPromise({snake: snake, food: food, inputDirection: direction}).then((state)=>{
-                                    expect(state.snake).to.eql([[9,10],[8,10]]);
+                                    expect(state.snake).to.eql([[ 10, 10 ],[9,10],[8,10]]);
                                 });
                             });
                         });
@@ -122,7 +122,7 @@ describe('<App/>', ()=>{
                     describe('when the next square is food', ()=>{
                         it('increments length state', ()=>{
                             return getTickPromise({food:[9,10], inputDirection: 'up'}).then((state)=>{
-                                expect(state.snakeLength).to.equal(3);
+                                expect(state.snakeLength).to.equal(6);
                             });
                         });
                         it('sets a new food square correctly', ()=>{
@@ -141,7 +141,7 @@ describe('<App/>', ()=>{
                     });
                     
                     describe('when input direction is opposite of direction', ()=>{
-                        it('leaves direction the same', ()=>{
+                        it('leaves direction the same', ()=>{ //this state should no longer occur, since _handleKey tosses out bad directions
                             return getTickPromise({direction:'up', inputDirection: 'down', food:[0,0]}).then((state)=>{
                                 expect(state.direction).to.equal('up');
                                 expect(state.snake).to.eql([[10,10], [9,10]]);

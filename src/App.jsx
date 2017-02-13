@@ -3,12 +3,13 @@ import React from 'react';
 var KEYS = {38: 'up', 40: 'down', 37: 'left', 39: 'right', 32: 'space'};
 var INITIAL_COORDINATES = [10,10];
 var INITIAL_SPEED = 5;
+const INITIAL_LENGTH = 5;
 const BOARD_SIZE = 20;
 class App extends React.Component{
     constructor(){
         super();
         //autoBind(this);
-        this.state = {snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: 4, inputDirection: null, gameOver: false};
+        this.state = {snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: INITIAL_LENGTH, inputDirection: null, gameOver: false};
         this._tick = this._tick.bind(this);
         this._pause = this._pause.bind(this);
         this._resume = this._resume.bind(this);
@@ -87,7 +88,7 @@ class App extends React.Component{
     }
     
     _reset(){
-        this.setState({snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: 2, inputDirection: null, gameOver: false},()=>{
+        this.setState({snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: INITIAL_LENGTH, inputDirection: null, gameOver: false},()=>{
             this.board.focus();
             this._tick(this._tick);
         });
