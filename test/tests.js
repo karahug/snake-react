@@ -55,11 +55,11 @@ describe('<App/>', ()=>{
                     expect(rendered.state('direction')).to.equal(null);
                 });
                 it('sets initial speed', ()=>{
-                    expect(rendered.state('speed')).to.equal(10);
+                    expect(rendered.state('speed')).to.equal(5);
                 });
                 
-                it('sets initial length = 2', ()=>{
-                    expect(rendered.state('snakeLength')).to.equal(2);
+                it('sets initial length = 4', ()=>{
+                    expect(rendered.state('snakeLength')).to.equal(4);
                 });
             });
         });

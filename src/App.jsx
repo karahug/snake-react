@@ -2,13 +2,13 @@ import React from 'react';
 //import autoBind from 'react-autobind';
 var KEYS = {38: 'up', 40: 'down', 37: 'left', 39: 'right', 32: 'space'};
 var INITIAL_COORDINATES = [10,10];
-var INITIAL_SPEED = 10;
+var INITIAL_SPEED = 5;
 const BOARD_SIZE = 20;
 class App extends React.Component{
     constructor(){
         super();
         //autoBind(this);
-        this.state = {snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: 2, inputDirection: null, gameOver: false};
+        this.state = {snake: [INITIAL_COORDINATES], food: randomOpenSquare([INITIAL_COORDINATES]), direction: null, paused: false, speed: INITIAL_SPEED, snakeLength: 4, inputDirection: null, gameOver: false};
         this._tick = this._tick.bind(this);
         this._pause = this._pause.bind(this);
         this._resume = this._resume.bind(this);
@@ -22,7 +22,6 @@ class App extends React.Component{
         this._tick(this._tick);
     }
     _tick(callback){
-        console.log('tick');
         if(!this.state.paused && !this.state.gameOver){
             const timeOutPromise = new Promise((resolve, reject)=>{setTimeout(()=>{resolve()}, Math.floor(1000/this.state.speed))});
             const setStatePromise = new Promise((resolve, reject)=>{
@@ -73,9 +72,10 @@ class App extends React.Component{
             this._pause();
             return;
         }
-        const inputDirection = KEYS[key] || this.state.key;
-        console.log(inputDirection);
-        this.setState({inputDirection: inputDirection});
+        const inputDirection = KEYS[key] || this.state.inputDirection;
+        if(inputDirection != this.state.direction && resolveDirection(inputDirection, this.state.direction) != this.state.direction){
+            this.setState({inputDirection: inputDirection});
+        }
     }
  
     _resume(){
@@ -104,9 +104,9 @@ class App extends React.Component{
             >
                 {createSquaresArray(this.state.snake, this.state.food)}
             </div>
-            <div className='controls'>
-                <span>Game over</span>
-                <button type="button" onClick={this._reset}>Restart</button>
+            <div className={'controls' + ((this.state.paused || this.state.gameOver) ? '':' hidden')}>
+                <button className={this.state.gameOver ? 'restart': 'restart hidden'} type="button" onClick={this._reset}>Restart</button>
+                <button className={(this.state.paused && !this.state.gameOver) ? 'resume' : 'resume hidden'} type="button" onClick={this._resume}>Resume</button>
             </div>
         </div>
         );
@@ -116,7 +116,7 @@ class App extends React.Component{
 
 
 function randomOpenSquare(snake){
-    var openSquareCount = BOARD_SIZE - snake.length; // 20 is how many squares in each row/column
+    var openSquareCount = Math.pow(BOARD_SIZE,2) - snake.length; // 20 is how many squares in each row/column
     var randomSquareIndex = Math.floor(Math.random() * openSquareCount);
     const openSquares = [];
     for(let i = 0; i < BOARD_SIZE; i++){
